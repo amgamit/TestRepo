@@ -40,5 +40,6 @@ payload.resultSet1
 			</ee:message>
 		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="c15c5571-96d3-41fd-9c18-a4174076d547" message="#[payload]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3881e86b-f586-429c-9849-09692e6fac31" />
 	</flow>
 </mule>
