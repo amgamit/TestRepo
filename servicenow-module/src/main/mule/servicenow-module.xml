@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:servicenow="http://www.mulesoft.org/schema/mule/servicenow" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/servicenow http://www.mulesoft.org/schema/mule/servicenow/current/mule-servicenow.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2fe97c5d-693d-4434-bdb2-faef565c0ff7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<servicenow:config name="ServiceNow_Config" doc:name="ServiceNow Config" doc:id="ddf6df91-093c-4892-8163-7ef1e403c53a" >
+		<servicenow:basic-connection username="admin" password="aYVLDmpV2k1s" serviceAddress="https://dev35223.service-now.com/">
+			<servicenow:transport >
+				<servicenow:basic-auth-http-message-dispatcher-provider username="admin" password="aYVLDmpV2k1s" />
+			</servicenow:transport>
+		</servicenow:basic-connection>
+	</servicenow:config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="7db0b491-bb7a-4941-970d-09261ee5e208" >
+		<wsc:connection wsdlLocation="http://localhost:6060/soap/ws/products.wsdl" service="ProductServicePortService" port="ProductServicePortSoap11" address="http://localhost:6060/soap/ws" />
+	</wsc:config>
+	<flow name="servicenow-moduleFlow" doc:id="c1880426-aaba-402e-bbf5-b41980432349" >
+		<http:listener doc:name="Listener" doc:id="f54eb18b-6a13-4045-a5e3-48e48255be2f" config-ref="HTTP_Listener_config" path="/servicenow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="751f72d8-bef7-460d-912b-ff4e5517611f" message='#[payload]'/>
+		<ee:transform doc:name="Transform Message" doc:id="6db3777a-091c-4398-a349-a9002cc2a0b0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume doc:name="Consume" doc:id="90420439-4f9c-4f22-9293-04c6fe4a04f0" config-ref="Web_Service_Consumer_Config" operation="getAllProducts"/>
+		<ee:transform doc:name="Transform Message" doc:id="cf287831-2f8f-4f6a-8a7b-cf341e3b8c39" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c868d70a-f9ec-4b95-aabd-4d9b3f40de2d" message="#[payload]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="82d27089-4b86-4e1e-a310-b65de86250ca" >
+				<ee:transform doc:name="Transform Message" doc:id="b4a6e8c2-1261-4211-86d4-590711d25169">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.service-now.com/incident
+---
+{
+	ns0#insert: {
+		ns0#urgency: 1,		
+		ns0#comments: "This is very urgent. Please resolve it quickly",
+		ns0#short_description: error.description,
+		ns0#state: "New"
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<servicenow:invoke service="incident" operation="insert" doc:name="Invoke" doc:id="b95eeeb6-f4e1-4bb7-9c82-25f628e649bc" config-ref="ServiceNow_Config">
+			
+		</servicenow:invoke>
+				<logger level="INFO" doc:name="Logger" doc:id="4f6caaf4-3697-4b50-879c-9b3d806bd4b7" message="#[payload]" />
+				<ee:transform doc:name="Transform Message" doc:id="8e80e288-30b4-4223-b3c1-41432729793b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
