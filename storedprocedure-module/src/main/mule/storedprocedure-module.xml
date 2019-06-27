@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d29a1da2-5431-4542-b38b-1a451230a7e0" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="acb3cb55-b3dc-4c88-8355-44dc60bd4435" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="muletrainingdb" />
+	</db:config>
+	<flow name="storedprocedure-moduleFlow" doc:id="d8f76bf2-619d-4b44-87c4-5a68ed2567b5" >
+		<http:listener doc:name="Listener" doc:id="9e33483b-4bbd-4e43-a1ff-68436ec0669d" config-ref="HTTP_Listener_config" path="/storedprocedure"/>
+		<logger level="INFO" doc:name="Logger" doc:id="504b0e79-11b0-4b30-8742-4a3e5c20eec5" message="#[payload]"/>
+		<set-variable value="#[payload.Name as String]" doc:name="Set Variable" doc:id="ca3062e3-54f8-457d-976d-f9b689e4c09e" variableName="countryName"/>
+		<db:stored-procedure doc:name="Stored procedure" doc:id="8d356cf2-bf9a-4191-85df-d03b341c8854" config-ref="Database_Config">
+			<db:sql >CALL country_hos(:Name);</db:sql>
+			<db:input-parameters ><![CDATA[#[%dw 2.0
+output application/java
+---
+{
+	Name: vars.countryName
+}]]]></db:input-parameters>
+		</db:stored-procedure>
+		<ee:transform doc:name="Transform Message" doc:id="d3293f23-d063-4e9f-b161-2343a4b336f6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+payload.resultSet1
+	
+
+
+	
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c15c5571-96d3-41fd-9c18-a4174076d547" message="#[payload]"/>
+	</flow>
+</mule>
