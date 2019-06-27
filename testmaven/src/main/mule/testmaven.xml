@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ce929bfa-01be-46b1-91ea-943f8a613b89" >
+		<http:listener-connection host="0.0.0.0" port="8900" />
+	</http:listener-config>
+	<flow name="testmavenFlow" doc:id="25bbcd33-e831-406d-812f-6e9f452d2aca" >
+		<http:listener doc:name="Listener" doc:id="818b1c43-e52d-47f8-8e50-9783639f7be9" config-ref="HTTP_Listener_config" path="/python"/>
+		<scripting:execute engine="jython" doc:name="Execute" doc:id="958f83c8-5c55-4700-8ff1-81bc75d7c65d" >
+			<scripting:code >print('Hello World')</scripting:code>
+		</scripting:execute>
+	</flow>
+	<flow name="testmavenFlow2" doc:id="7ce8542a-9f19-49b3-b601-47fc03497375" />
+	<flow name="testmavenFlow1" doc:id="402134dc-b0bf-4774-84de-c47503d72fad" >
+		 <choice>
+    <when expression="#[payload.age &gt; 21]">
+				<flow-ref doc:name="Flow Reference" doc:id="c8cbf488-0958-480b-a7fa-b3a346cfb942" name="testmavenFlow2"/>
+
+    </when>
+			<otherwise>
+      <logger message="underage" />
+    </otherwise>
+  </choice>
+	</flow>
+</mule>
