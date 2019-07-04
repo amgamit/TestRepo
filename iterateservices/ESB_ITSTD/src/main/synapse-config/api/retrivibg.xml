@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/studentid" name="retrivibg" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST">
+        <inSequence>
+            <log level="custom" separator=",">
+                <property expression="$body" name="SFDCLOG"/>
+            </log>
+            <property expression="json-eval($.studnetid.id)" name="id" scope="default" type="STRING"/>
+            <log level="custom" separator=",">
+                <property expression="fn:concat('student id  -',get-property('id'))" name="in_value"/>
+            </log>
+            <payloadFactory media-type="xml">
+                <format>
+                    <dat:_postretrivestudent1details xmlns:dat="http://ws.wso2.org/dataservice">
+                        <dat:id>$1</dat:id>
+                    </dat:_postretrivestudent1details>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('id')"/>
+                </args>
+            </payloadFactory>
+            <property name="SOAPAction" scope="transport" type="STRING" value="urn:_postretrivestudent1details"/>
+            <property name="ContentType" scope="axis2" type="STRING" value="text/xml"/>
+            <log level="full"/>
+            <call>
+                <endpoint key="EP_STD"/>
+            </call>
+            <log level="full"/>
+            <property name="ContentType" scope="axis2" type="STRING" value="application/json"/>
+            <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+            <respond/>
+        </inSequence>
+        <outSequence/>
+        <faultSequence/>
+    </resource>
+</api>
