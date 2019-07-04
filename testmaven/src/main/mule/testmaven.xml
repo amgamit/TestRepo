@@ -17,6 +17,7 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
 		</scripting:execute>
 	</flow>
 	<flow name="testmavenFlow2" doc:id="7ce8542a-9f19-49b3-b601-47fc03497375" />
+	<flow name="testmavenFlow3" doc:id="7ce8542a-9f19-49b3-b601-47fc03497375" />
 	<flow name="testmavenFlow1" doc:id="402134dc-b0bf-4774-84de-c47503d72fad" >
 		 <choice>
     <when expression="#[payload.age &gt; 21]">
